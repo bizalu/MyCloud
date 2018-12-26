@@ -1,0 +1,7 @@
+- name: Deploy MyCloud Core module
+  hosts: localhost
+  gather_facts: no
+  become: no
+
+  roles:
+    - role: os
