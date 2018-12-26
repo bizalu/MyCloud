@@ -1,0 +1,3 @@
+mysql_home_dir: "/data/mysql"
+mysql_data_dir: "{{ mysql_home_dir }}/data"
+mysql_logs_dir: "{{ mysql_home_dir }}/logs"
