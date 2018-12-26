@@ -1,1 +1,1 @@
-os_ntp_ip: "8.8.8.8"
+os_ntp_address: "0.centos.pool.ntp.org"
