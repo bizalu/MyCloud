@@ -1,0 +1,22 @@
+- name: Check if required variables are defined
+  fail:
+    msg: 'variable {{item}} not defined or empty'
+  when: (item is undefined) or (item is none) or (item | trim == '')
+  with_items:
+   - os_ntp_ip
+   
+- name: stop ntpd service
+  service:
+    name: ntpd
+    state: stopped
+
+- name: Time synchronization with active directory
+  shell: ntpdate {{ os_ntp_ip }}
+
+- name: start ntpd service
+  service:
+    name: ntpd
+    state: started
+
+- name: Detect possible additionnal disk
+  shell: for BUS in /sys/class/scsi_host/host*/scan; do echo "- - -" >  ${BUS}; done
