@@ -10,8 +10,8 @@
     name: ntpd
     state: stopped
 
-- name: Time synchronization with active directory
-  shell: ntpdate {{ os_ntp_ip }}
+- name: Force time synchronization
+  shell: ntpdate {{ os_ntp_address }}
 
 - name: start ntpd service
   service:
