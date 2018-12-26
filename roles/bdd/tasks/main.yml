@@ -1,0 +1,143 @@
+- name: Check if required variables are defined
+  fail:
+    msg: 'variable {{item}} not defined or empty'
+  when: (item is undefined) or (item is none) or (item | trim == '')
+  with_items:
+    - mysql_home_dir
+    - mysql_data_dir
+    - mysql_logs_dir
+
+- name: Install database packages
+  yum: 
+    name: mariadb-server, MySQL-python
+    state: present
+
+- name: Enable service mariadb
+  systemd:
+    name: mariadb
+    enabled: yes
+
+- name: Create or resize a database logical volume
+  lvol:
+    vg: appvg
+    lv: bddlv
+    size: 5G
+
+- name: Create ext3 filesystem for database
+  filesystem:
+    fstype: ext3
+    dev: /dev/mapper/appvg-bddlv
+
+- name: Mount database filesystem
+  mount:
+    path: "{{ mysql_data_dir }}"
+    src: /dev/mapper/appvg-bddlv
+    fstype: ext3
+    opts: defaults
+    state: mounted
+
+- name: Create or resize a logs database logical volume
+  lvol:
+    vg: appvg
+    lv: bddlogslv
+    size: 2G
+
+- name: Create ext3 filesystem for logs
+  filesystem:
+    fstype: ext3
+    dev: /dev/mapper/appvg-bddlogslv
+
+- name: Mount logs filesystem
+  mount:
+    path: "{{ mysql_logs_dir }}"
+    src: /dev/mapper/appvg-bddlogslv
+    fstype: ext3
+    opts: defaults
+    state: mounted
+
+- name: Set UNIX rights on mount point
+  file:
+    path: "{{ item }}"
+    owner: mysql
+    group: mysql
+    mode: 0755
+  with_items: 
+    - "{{ mysql_home_dir }}"
+    - "{{ mysql_data_dir }}"
+    - "{{ mysql_logs_dir }}"
+
+- name: Push database configuration file
+  template:
+    src: my-small.j2
+    dest: /etc/my.cnf.d/database.cnf
+
+
+- name: First set of SELinux rigths on mount point
+  shell: /usr/bin/chcon -R system_u:object_r:mysqld_db_t:s0 "{{ mysql_home_dir }}"
+
+- name: Add database port on firewalld
+  firewalld:
+    service: mysql
+    permanent: true
+    immediate: true
+    state: enabled
+
+- name: First start of database service
+  service:
+    name: mariadb
+    state: started
+  register: start_bdd
+  ignore_errors: true
+
+- name: Second set of SELinux rigths on mount point if database start failed
+  shell: /usr/bin/chcon -R system_u:object_r:mysqld_db_t:s0 "{{ mysql_home_dir }}"
+  when: start_bdd is failed
+
+- name: Second Start of database service if first failed
+  service:
+    name: mariadb
+    state: started
+  when: start_bdd is failed
+
+- name: Check if the authentification database file existe
+  stat:
+    path: /root/.my.cnf
+  register: exist_result
+
+- name: Generate database root password if needed
+  set_fact:
+    mysql_root_password: "{{ lookup('password', '/dev/null chars=ascii_letters,digits,hexdigits,punctuation length=16') }}"
+  when: exist_result.stat.exists == False
+
+- name: Sets the root password if needed
+  mysql_user: 
+    user: root 
+    password: "{{ mysql_root_password }}"
+    host: localhost
+    login_unix_socket: "{{ mysql_home_dir }}/mysql.sock"
+  when: exist_result.stat.exists == False
+
+- name: Push authentification database file if needed
+  template:
+    src: my-cnf.j2
+    dest: /root/.my.cnf
+  when: exist_result.stat.exists == False
+
+- name: Deletes anonymous MySQL server user for ansible_fqdn
+  mysql_user: 
+    user: "" 
+    host: "{{ ansible_fqdn }}"
+    login_unix_socket: "{{ mysql_home_dir }}/mysql.sock"
+    state: absent
+
+- name: Deletes anonymous MySQL server user for localhost
+  mysql_user: 
+    user: ""
+    login_unix_socket: "{{ mysql_home_dir }}/mysql.sock"
+    state: absent
+
+- name: Removes the MySQL test database
+  mysql_db: 
+    db: test
+    login_unix_socket: "{{ mysql_home_dir }}/mysql.sock"
+    state: absent
