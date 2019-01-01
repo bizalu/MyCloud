@@ -15,11 +15,11 @@
 
 - name: create nginx configuration directory
   file:
-   path: "{{ item }}"
+    path: "{{ item }}"
     owner: root
     group: root
     mode: 0755
-   state: directory
+    state: directory
   with_items: 
     - /etc/nginx/sites-available/
     - /etc/nginx/sites-enabled/
