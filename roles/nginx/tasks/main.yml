@@ -34,3 +34,18 @@
    src: /etc/nginx/sites-available/https-redirect.conf
    dest: /etc/nginx/sites-enabled/https-redirect.conf
    state: link
+
+- name: Push nginx https reverse configuration file
+  template:
+    src: reverse.j2
+    dest: /etc/nginx/sites-available/https-reverse.conf
+
+- name: activate nginx https reverse
+  file:
+   src: /etc/nginx/sites-available/https-reverse.conf
+   dest: /etc/nginx/sites-enabled/https-reverse.conf
+   state: link
+
+  service:
+    name: nginx
+    state: started
