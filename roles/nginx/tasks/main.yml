@@ -7,3 +7,19 @@
   systemd:
     name: nginx
     enabled: yes
+
+- name: Push nginx configuration file
+  template:
+    src: nginx.j2
+    dest: /etc/nginx/nginx.conf
+
+- name: Push nginx https redirection configuration file
+  template:
+    src: redirect.j2
+    dest: /etc/nginx/sites-available/https-redirect.conf
+
+- name: activate nginx https redirection
+  file:
+   src: /etc/nginx/sites-available/https-redirect.conf
+   dest: /etc/nginx/sites-enabled/https-redirect.conf
+   state: link
