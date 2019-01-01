@@ -4,3 +4,4 @@
   roles:
     - role: os
     - role: bdd
+    - role: nginx
