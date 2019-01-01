@@ -1,9 +1,9 @@
 - name: Install nginx package and dependancy
   yum: 
-    name: nginx, letsencrypt
+    name: nginx, letsencrypt, openssl
     state: present
 
-- name: Enable service nginx
+- name: Enable nginx service
   systemd:
     name: nginx
     enabled: yes
@@ -23,17 +23,33 @@
   with_items: 
     - /etc/nginx/sites-available/
     - /etc/nginx/sites-enabled/
+    - /etc/nginx/letsencrypt/
 
-- name: Push nginx https redirection configuration file
+- name: Push nginx http redirection configuration file
   template:
     src: redirect.j2
     dest: /etc/nginx/sites-available/https-redirect.conf
 
-- name: activate nginx https redirection
+- name: Start nginx https redirection
   file:
    src: /etc/nginx/sites-available/https-redirect.conf
    dest: /etc/nginx/sites-enabled/https-redirect.conf
    state: link
+
+- name: Start nginx service 
+  service:
+    name: nginx
+    state: started
+
+- name: Create letsencrypt certificate
+  shell: letsencrypt certonly -n --webroot -w /etc/nginx/letsencrypt --agree-tos -d {{ ansible_nodename }}
+  args:
+    creates: /etc/letsencrypt/live/{{ ansible_nodename }}
+
+- name: Generate dhparams
+  shell: openssl dhparam -out /etc/nginx/dhparams.pem 2048
+  args:
+    creates: /etc/nginx/dhparams.pem
 
 - name: Push nginx https reverse configuration file
   template:
@@ -49,4 +65,10 @@
 - name: Start nginx service 
   service:
     name: nginx
-    state: started
+    state: restarted
+
+- name: Add letsencrypt cronjob for cert renewal
+  cron:
+    name: letsencrypt_renewal
+    special_time: weekly
+    job: letsencrypt --renew certonly -n --webroot -w /etc/nginx/letsencrypt --agree-tos -d {{ ansible_nodename }} && service nginx reload  
