@@ -1,6 +1,6 @@
-- name: Install nginx package
+- name: Install nginx package and dependancy
   yum: 
-    name: nginx
+    name: nginx, letsencrypt
     state: present
 
 - name: Enable service nginx
@@ -46,7 +46,7 @@
    dest: /etc/nginx/sites-enabled/https-reverse.conf
    state: link
 
-- name: Start nginx 
+- name: Start nginx service 
   service:
     name: nginx
     state: started
