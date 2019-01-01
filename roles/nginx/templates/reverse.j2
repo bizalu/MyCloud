@@ -1,0 +1,12 @@
+server {
+    listen 443;
+    server_name {{ ansible_nodename }} {{ ansible_default_ipv4.address }};
+    ssl on;
+    ssl_certificate /etc/letsencrypt/live/{{ ansible_nodename }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ ansible_nodename }}/privkey.pem;
+    client_max_body_size 513M;
+
+location / {
+     error_page 404 =200 /index.html;
+  }
+}
