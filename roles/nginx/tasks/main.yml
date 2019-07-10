@@ -25,12 +25,12 @@
     - /etc/nginx/sites-enabled/
     - /etc/nginx/letsencrypt/
 
-- name: Push nginx http redirection configuration file
+- name: Push nginx https redirection configuration file
   template:
     src: redirect.j2
     dest: /etc/nginx/sites-available/https-redirect.conf
 
-- name: Start nginx https redirection
+- name: Activate nginx https redirection
   file:
    src: /etc/nginx/sites-available/https-redirect.conf
    dest: /etc/nginx/sites-enabled/https-redirect.conf
