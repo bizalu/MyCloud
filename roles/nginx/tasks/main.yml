@@ -36,6 +36,11 @@
    dest: /etc/nginx/sites-enabled/https-redirect.conf
    state: link
 
+- name: Start nginx service 
+  service:
+    name: nginx
+    state: started
+
 - name: Create letsencrypt certificate
   shell: letsencrypt certonly -n --webroot -w /etc/nginx/letsencrypt --agree-tos -d {{ ansible_nodename }}
   args:
