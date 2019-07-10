@@ -5,4 +5,4 @@
     - role: os
     - role: bdd
     - role: nginx
-      domain_name: "elserverido.no-ip.info"
+      domain_name: "test-elserverido.no-ip.info"
