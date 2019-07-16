@@ -1,0 +1,20 @@
+<VirtualHost *:80>
+    DocumentRoot "{{ owncloud_http_dir }}"
+#    ServerName yourdomain.com
+#    ServerAlias www.yourdomain.com
+    Alias /owncloud "{{ owncloud_http_dir }}"
+
+    ErrorLog "/var/log/httpd/owncloud-error_log"
+    CustomLog "/var/log/httpd/owncloud-access_log" combined
+
+    <Directory "{{ owncloud_http_dir }}">
+        DirectoryIndex index.html index.php
+        Options FollowSymLinks
+        AllowOverride All
+        Require all granted
+        
+        SetEnv HOME {{ owncloud_http_dir }}
+        SetEnv HTTP_HOME {{ owncloud_http_dir }}
+        php_admin_value open_basedir "{{ owncloud_http_dir }}:{{ owncloud_data_dir }}:/tmp:/dev/urandom"
+    </Directory>
+</VirtualHost>

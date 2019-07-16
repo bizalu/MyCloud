@@ -1,0 +1,10 @@
+owncloud_db_user: "{{ db_user }}"
+owncloud_db_database: "{{ db_database }}"
+owncloud_db_password: "{{ db_password }}"
+owncloud_db_hostname: "{{ db_hostname }}"
+
+owncloud_http_dir: "/app/owncloud/http"
+owncloud_data_dir: "/app/owncloud/data"
+
+owncloud_http_user: "admin"
+owncloud_http_password: "P@ssw0rd"
